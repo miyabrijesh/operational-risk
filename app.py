@@ -59,19 +59,43 @@ with tab1:
         2: "High Processing"
     }
 
-    # ---------------- INPUT UI ----------------
-    category = st.selectbox("Product Category", list(category_map.keys()))
-    reason = st.selectbox("Return Reason", list(reason_map.keys()))
-    load = st.selectbox("Warehouse Load", list(load_map.keys()))
-    inspection = st.selectbox("Inspection Level", list(inspection_map.keys()))
+   encoders = joblib.load("encoders.pkl")
 
-    # ---------------- ENCODING ----------------
-    encoders = joblib.load("encoders.pkl")
+# ----------- CREATE DISPLAY MAPPING -----------
 
-    category_encoded = encoders["product_category_name"].transform([category])[0]
-    reason_encoded = encoders["return_reason"].transform([reason])[0]
-    load_encoded = encoders["warehouse_load"].transform([load])[0]
-    inspection_encoded = encoders["inspection_level"].transform([inspection])[0]
+    def clean_label(x):
+        return x.replace("_", " ").title()
+
+    # Category
+    category_options = encoders["product_category_name"].classes_
+    category_display = {clean_label(x): x for x in category_options}
+
+    category = st.selectbox("Product Category", list(category_display.keys()))
+
+    # Return Reason
+    reason_options = encoders["return_reason"].classes_
+    reason_display = {clean_label(x): x for x in reason_options}
+
+    reason = st.selectbox("Return Reason", list(reason_display.keys()))
+
+    # Warehouse Load
+    load_options = encoders["warehouse_load"].classes_
+    load_display = {clean_label(x): x for x in load_options}
+
+    load = st.selectbox("Warehouse Load", list(load_display.keys()))
+
+    # Inspection Level
+    inspection_options = encoders["inspection_level"].classes_
+    inspection_display = {clean_label(x): x for x in inspection_options}
+
+    inspection = st.selectbox("Inspection Level", list(inspection_display.keys()))
+
+    # ----------- ENCODING (SAFE NOW) -----------
+
+    category_encoded = encoders["product_category_name"].transform([category_display[category]])[0]
+    reason_encoded = encoders["return_reason"].transform([reason_display[reason]])[0]
+    load_encoded = encoders["warehouse_load"].transform([load_display[load]])[0]
+    inspection_encoded = encoders["inspection_level"].transform([inspection_display[inspection]])[0]
 
     # ---------------- PREDICTION ----------------
     if st.button("Predict"):
