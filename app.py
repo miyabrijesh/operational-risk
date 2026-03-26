@@ -37,24 +37,35 @@ inspection = st.selectbox(
 
 if st.button("Predict"):
 
-    input_data = [
+    # ---------------- PROCESSING INPUT (3 features) ----------------
+    proc_input = pd.DataFrame([[
+        encoders["product_category_name"].transform([category])[0],
+        encoders["return_reason"].transform([reason])[0],
+        encoders["warehouse_load"].transform([load])[0]
+    ]], columns=[
+        "product_category_name",
+        "return_reason",
+        "warehouse_load"
+    ])
+
+    # ---------------- FRAUD INPUT (4 features) ----------------
+    fraud_input = pd.DataFrame([[
         encoders["product_category_name"].transform([category])[0],
         encoders["return_reason"].transform([reason])[0],
         encoders["inspection_level"].transform([inspection])[0],
         encoders["warehouse_load"].transform([load])[0]
-    ]
-
-    input_df = pd.DataFrame([input_data], columns=[
+    ]], columns=[
         "product_category_name",
         "return_reason",
         "inspection_level",
         "warehouse_load"
     ])
 
-    proc_pred = model_proc.predict(input_df)[0]
+    # Predictions
+    proc_pred = model_proc.predict(proc_input)[0]
     proc_label = target_encoder.inverse_transform([proc_pred])[0]
 
-    fraud_pred = model_fraud.predict(input_df)[0]
+    fraud_pred = model_fraud.predict(fraud_input)[0]
 
     st.markdown("### 🔍 Results")
 
