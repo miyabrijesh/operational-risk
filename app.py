@@ -41,6 +41,12 @@ inspection_map = {
     2: "Intensive"
 }
 
+processing_map = {
+    0: "Low Processing",
+    1: "Medium Processing",
+    2: "High Processing"
+}
+
 # ---------------- INPUTS ----------------
 
 category = st.selectbox("Product Category", list(category_map.values()))
@@ -96,12 +102,14 @@ if st.button("Predict"):
     st.markdown("### 🔍 Results")
 
     # Processing output
-    st.success(f"📊 Processing Category: **{proc_label}**")
+    st.success(f"📊 Processing Category: **{processing_map[proc_pred]}**")
 
     # Fraud output (IMPROVED LOGIC)
     st.metric("Fraud Risk Score", f"{fraud_prob:.6f}")
 
-    if fraud_prob > 0.01:
+    if fraud_prob > 0.05:
         st.error(f"⚠️ High Fraud Risk")
-    else:
-        st.success(f"✅ Likely Genuine Return")
+    elif fraud_prob > 0.01:
+        st.success(f"Medium Fraud Risk")
+    else: 
+        st.success(f"Likely Genuine return")
