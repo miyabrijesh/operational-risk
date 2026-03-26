@@ -15,45 +15,69 @@ st.subheader("Operations + Fraud Prediction Dashboard")
 
 st.write("Predict processing category and fraud risk based on return details.")
 
-# Inputs
-category = st.selectbox(
-    "Product Category",
-    encoders["product_category_name"].classes_
-)
+# ---------------- HUMAN READABLE MAPPINGS ----------------
 
-reason = st.selectbox(
-    "Return Reason",
-    encoders["return_reason"].classes_
-)
+category_map = {
+    0: "Electronics",
+    1: "Groceries",
+    2: "Clothing"
+}
 
-load = st.selectbox(
-    "Warehouse Load",
-    encoders["warehouse_load"].classes_
-)
-inspection = st.selectbox(
-    "Inspection Level",
-    encoders["inspection_level"].classes_
-)
+reason_map = {
+    0: "Damaged",
+    1: "Wrong Item",
+    2: "Not Needed"
+}
+
+load_map = {
+    0: "Low",
+    1: "Medium",
+    2: "High"
+}
+
+inspection_map = {
+    0: "Basic",
+    1: "Manual",
+    2: "Intensive"
+}
+
+# ---------------- INPUTS ----------------
+
+category = st.selectbox("Product Category", list(category_map.values()))
+reason = st.selectbox("Return Reason", list(reason_map.values()))
+load = st.selectbox("Warehouse Load", list(load_map.values()))
+inspection = st.selectbox("Inspection Level", list(inspection_map.values()))
+
+# Convert back to encoded values
+def get_key(val, dictionary):
+    return list(dictionary.keys())[list(dictionary.values()).index(val)]
+
+category_encoded = get_key(category, category_map)
+reason_encoded = get_key(reason, reason_map)
+load_encoded = get_key(load, load_map)
+inspection_encoded = get_key(inspection, inspection_map)
+
+# ---------------- PREDICTION ----------------
 
 if st.button("Predict"):
 
-    # ---------------- PROCESSING INPUT (3 features) ----------------
+    # Processing model input (3 features)
     proc_input = pd.DataFrame([[
-        encoders["product_category_name"].transform([category])[0],
-        encoders["return_reason"].transform([reason])[0],
-        encoders["warehouse_load"].transform([load])[0]
+        category_encoded,
+        reason_encoded,
+        load_encoded
     ]], columns=[
         "product_category_name",
         "return_reason",
         "warehouse_load"
     ])
 
-    # ---------------- FRAUD INPUT (4 features) ----------------
+    # Fraud model input (4 features)
     fraud_input = pd.DataFrame([[
-        encoders["product_category_name"].transform([category])[0],
-        encoders["return_reason"].transform([reason])[0],
-        encoders["inspection_level"].transform([inspection])[0],
-        encoders["warehouse_load"].transform([load])[0]
+        category_encoded,
+        reason_encoded,
+        inspection_encoded,
+        load_encoded
     ]], columns=[
         "product_category_name",
         "return_reason",
@@ -66,6 +90,8 @@ if st.button("Predict"):
     proc_label = target_encoder.inverse_transform([proc_pred])[0]
 
     fraud_pred = model_fraud.predict(fraud_input)[0]
+
+    # ---------------- OUTPUT ----------------
 
     st.markdown("### 🔍 Results")
 
