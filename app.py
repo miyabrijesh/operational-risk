@@ -1,6 +1,15 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import streamlit.components.v1 as components
+
+# Load your HTML dashboard
+with open("ecommerce_returns_dashboard.html", "r", encoding="utf-8") as f:
+    html_content = f.read()
+
+st.markdown("## 📊 Advanced Dashboard")
+
+components.html(html_content, height=1000, scrolling=True)
 
 # Load models
 model_proc = joblib.load("processing_model.pkl")
