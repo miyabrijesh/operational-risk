@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>E-Commerce Returns Analytics | MGT3014</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --border: rgba(255,255,255,0.07);
+  --accent: #f97316;
+  --accent2: #38bdf8;
+  --accent3: #a78bfa;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --gold: #f59e0b;
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  position: fixed; left: 0; top: 0; width: 220px; height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 100; overflow-y: auto;
+}
+.logo-block {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-block .tag {
+  font-size: 9px; font-family: var(--font-mono); letter-spacing: 2px;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 6px;
+}
+.logo-block h2 {
+  font-family: var(--font-display);
+  font-size: 16px; line-height: 1.3;
+  color: var(--text);
+}
+nav { flex: 1; padding: 16px 12px; }
+.nav-section { font-size: 9px; font-family: var(--font-mono); letter-spacing: 2px; color: var(--muted); text-transform: uppercase; padding: 8px 8px 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px;
+  font-size: 13px; color: var(--muted);
+  cursor: pointer; transition: all 0.2s;
+  margin-bottom: 2px; border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: rgba(249,115,22,0.12); color: var(--accent); border-color: rgba(249,115,22,0.2); }
+.nav-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.nav-item.active .dot { background: var(--accent); }
+
+/* ─── MAIN ─── */
+.main { margin-left: 220px; }
+
+/* ─── HEADER ─── */
+.hero {
+  padding: 48px 48px 36px;
+  background: linear-gradient(135deg, rgba(249,115,22,0.06) 0%, transparent 50%);
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; right: -80px; top: -80px;
+  width: 400px; height: 400px;
+  background: radial-gradient(ellipse, rgba(249,115,22,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.hero-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+.hero h1 { font-family: var(--font-display); font-size: 36px; line-height: 1.15; margin-bottom: 10px; }
+.hero h1 em { font-style: italic; color: var(--accent); }
+.hero p { color: var(--muted); font-size: 14px; max-width: 560px; line-height: 1.7; }
+.hero-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+.hero-meta span { font-size: 11px; font-family: var(--font-mono); color: var(--muted); }
+.hero-meta span b { color: var(--accent2); }
+
+/* ─── SECTIONS ─── */
+.section { padding: 48px 48px; border-bottom: 1px solid var(--border); display: none; }
+.section.active { display: block; }
+
+.section-header { margin-bottom: 32px; }
+.section-title { font-family: var(--font-display); font-size: 28px; margin-bottom: 8px; }
+.section-title span { color: var(--accent); }
+.section-desc { color: var(--muted); font-size: 14px; line-height: 1.7; max-width: 640px; }
+
+/* ─── STAT CARDS ─── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 36px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: rgba(249,115,22,0.3); }
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.stat-card.orange::before { background: var(--accent); }
+.stat-card.blue::before { background: var(--accent2); }
+.stat-card.purple::before { background: var(--accent3); }
+.stat-card.red::before { background: var(--danger); }
+.stat-card.green::before { background: var(--success); }
+.stat-card.gold::before { background: var(--gold); }
+.stat-label { font-size: 10px; font-family: var(--font-mono); letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.stat-val { font-size: 32px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+.stat-sub { font-size: 11px; color: var(--muted); }
+.stat-card.orange .stat-val { color: var(--accent); }
+.stat-card.blue .stat-val { color: var(--accent2); }
+.stat-card.purple .stat-val { color: var(--accent3); }
+.stat-card.red .stat-val { color: var(--danger); }
+.stat-card.green .stat-val { color: var(--success); }
+.stat-card.gold .stat-val { color: var(--gold); }
+
+/* ─── CHART GRID ─── */
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 24px; margin-bottom: 24px; }
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px;
+}
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.chart-subtitle { font-size: 11px; color: var(--muted); margin-bottom: 20px; }
+.chart-wrap { position: relative; }
+
+/* ─── INSIGHT BOXES ─── */
+.insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 24px; }
+.insight-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px;
+  border-left: 3px solid var(--accent);
+}
+.insight-card.blue { border-left-color: var(--accent2); }
+.insight-card.purple { border-left-color: var(--accent3); }
+.insight-card.green { border-left-color: var(--success); }
+.insight-card.red { border-left-color: var(--danger); }
+.insight-label { font-size: 9px; font-family: var(--font-mono); letter-spacing: 2px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+.insight-card.blue .insight-label { color: var(--accent2); }
+.insight-card.purple .insight-label { color: var(--accent3); }
+.insight-card.green .insight-label { color: var(--success); }
+.insight-card.red .insight-label { color: var(--danger); }
+.insight-text { font-size: 13px; color: var(--text); line-height: 1.7; }
+.insight-text b { color: var(--text); }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 14px; background: var(--surface2); color: var(--muted); font-size: 10px; font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+tr:hover td { background: var(--surface2); }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-family: var(--font-mono); font-weight: 600;
+}
+.badge-fraud { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+.badge-genuine { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+.badge-high { background: rgba(249,115,22,0.15); color: var(--accent); border: 1px solid rgba(249,115,22,0.3); }
+.badge-med { background: rgba(56,189,248,0.15); color: var(--accent2); border: 1px solid rgba(56,189,248,0.3); }
+.badge-low { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+
+/* ─── POLICY TABLE ─── */
+.policy-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 20px; }
+.policy-table th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 10px; font-family: var(--font-mono); letter-spacing: 1px; color: var(--muted); border-bottom: 1px solid var(--border); }
+.policy-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; line-height: 1.5; }
+.policy-table tr:hover td { background: rgba(255,255,255,0.02); }
+.platform-name { font-weight: 600; color: var(--accent2); }
+
+/* ─── TIMELINE / PROCESS ─── */
+.process-flow { display: flex; flex-direction: column; gap: 0; }
+.process-step {
+  display: flex; gap: 20px; position: relative;
+}
+.process-step::before {
+  content: ''; position: absolute; left: 19px; top: 40px; width: 2px;
+  background: var(--border); bottom: 0;
+}
+.process-step:last-child::before { display: none; }
+.step-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0; font-weight: 700;
+  border: 2px solid;
+  font-family: var(--font-mono);
+}
+.step-icon.genuine { border-color: var(--success); color: var(--success); background: rgba(34,197,94,0.1); }
+.step-icon.fraud { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.1); }
+.step-icon.neutral { border-color: var(--accent2); color: var(--accent2); background: rgba(56,189,248,0.1); }
+.step-body { padding-bottom: 28px; flex: 1; }
+.step-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.step-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.step-time {
+  display: inline-block; margin-top: 8px; padding: 3px 10px;
+  background: var(--surface2); border-radius: 20px;
+  font-size: 10px; font-family: var(--font-mono); color: var(--accent);
+}
+
+/* ─── RECOMMENDATIONS ─── */
+.rec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.rec-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px;
+  position: relative;
+}
+.rec-num {
+  font-family: var(--font-display); font-size: 52px; color: rgba(249,115,22,0.08);
+  position: absolute; top: 12px; right: 16px; line-height: 1;
+}
+.rec-icon { font-size: 24px; margin-bottom: 12px; }
+.rec-title { font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+.rec-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.rec-impact {
+  display: inline-block; margin-top: 14px; padding: 4px 10px;
+  border-radius: 20px; font-size: 10px; font-family: var(--font-mono);
+  background: rgba(249,115,22,0.1); color: var(--accent);
+  border: 1px solid rgba(249,115,22,0.2);
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+/* ─── COMPARE BAR ─── */
+.compare-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.compare-label { font-size: 12px; width: 120px; flex-shrink: 0; color: var(--muted); }
+.compare-bar-wrap { flex: 1; background: rgba(255,255,255,0.05); border-radius: 4px; height: 22px; overflow: hidden; position: relative; }
+.compare-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-family: var(--font-mono); color: white; transition: width 1s ease; }
+.compare-val { font-family: var(--font-mono); font-size: 12px; width: 70px; text-align: right; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo-block">
+    <div class="tag">MGT3014 — Operations Analytics</div>
+    <h2>Returns Fraud &amp;<br/>Warehouse Ops</h2>
+  </div>
+  <nav>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showSection('overview',this)"><span class="dot"></span> Executive Summary</div>
+    <div class="nav-section">Analysis</div>
+    <div class="nav-item" onclick="showSection('fraud',this)"><span class="dot"></span> Fraud vs Genuine</div>
+    <div class="nav-item" onclick="showSection('operations',this)"><span class="dot"></span> Operational Delays</div>
+    <div class="nav-item" onclick="showSection('olist',this)"><span class="dot"></span> Olist Dataset</div>
+    <div class="nav-item" onclick="showSection('survey',this)"><span class="dot"></span> Consumer Survey</div>
+    <div class="nav-section">Deep Dive</div>
+    <div class="nav-item" onclick="showSection('policy',this)"><span class="dot"></span> Return Policies</div>
+    <div class="nav-item" onclick="showSection('process',this)"><span class="dot"></span> Process Mapping</div>
+    <div class="nav-item" onclick="showSection('recommendations',this)"><span class="dot"></span> Recommendations</div>
+  </nav>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- ════════ OVERVIEW ════════ -->
+<section class="section active" id="section-overview">
+  <div class="hero" style="padding:48px 48px 36px;">
+    <div class="hero-tag">Operations Analytics Review — Phase 2</div>
+    <h1>E-Commerce <em>Returns Fraud</em><br/>vs Warehouse Efficiency</h1>
+    <p>A data-driven operational analytics study combining quick-commerce simulated data (N=250), real-world Brazilian e-commerce data (N=111,702 from Olist/Kaggle), and primary consumer survey responses (N=80).</p>
+    <div class="hero-meta">
+      <span>Team: <b>22MIA1067 · 1084 · 1165 · 1174 · 1197</b></span>
+      <span>Faculty: <b>Dr. Balaji J</b></span>
+      <span>Date: <b>March 2026</b></span>
+    </div>
+  </div>
+
+  <div style="padding: 48px;">
+    <div class="section-header">
+      <div class="section-title">Key <span>Findings</span> at a Glance</div>
+      <div class="section-desc">Across three datasets and five analytical dimensions, a clear picture emerges: fraudulent returns impose a 3.6× processing time penalty and measurable warehouse workload distortion.</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card orange">
+        <div class="stat-label">Avg Processing — Fraud</div>
+        <div class="stat-val">74.2<span style="font-size:16px">min</span></div>
+        <div class="stat-sub">vs 20.7 min for genuine (3.6× slower)</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Avg Processing — Genuine</div>
+        <div class="stat-val">20.7<span style="font-size:16px">min</span></div>
+        <div class="stat-sub">Blinkit &amp; Swiggy Instamart data</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Fraud Acceptance Rate</div>
+        <div class="stat-val">18.8<span style="font-size:16px">%</span></div>
+        <div class="stat-sub">vs 88.5% for genuine returns</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Olist Fraud Rate</div>
+        <div class="stat-val">4.62<span style="font-size:16px">%</span></div>
+        <div class="stat-sub">5,163 of 111,702 orders flagged</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">Inspector Req. Pct</div>
+        <div class="stat-val">37.6<span style="font-size:16px">%</span></div>
+        <div class="stat-sub">Of all returns need human inspector</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-label">T-test Significance</div>
+        <div class="stat-val">p&lt;<span style="font-size:16px">0.001</span></div>
+        <div class="stat-sub">Processing time diff. is statistically real</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Processing Time: Genuine vs Fraud</div>
+        <div class="chart-subtitle">Minutes per return transaction — QuickCommerce dataset (N=250)</div>
+        <div class="chart-wrap"><canvas id="c_ptCompare" height="220"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Return Type Distribution</div>
+        <div class="chart-subtitle">Genuine vs suspected fraud across platforms</div>
+        <div class="chart-wrap"><canvas id="c_returnDist" height="220"></canvas></div>
+      </div>
+    </div>
+
+    <div class="insight-grid">
+      <div class="insight-card">
+        <div class="insight-label">Key Operational Finding</div>
+        <div class="insight-text">Fraudulent returns take <b>3.6× longer</b> to process than genuine ones (74.2 vs 20.7 min). This is statistically significant (t = −17.44, p &lt; 0.001), meaning inspection bottlenecks are directly attributable to fraud suspicion.</div>
+      </div>
+      <div class="insight-card blue">
+        <div class="insight-label">Warehouse Load Effect</div>
+        <div class="insight-text">Under <b>High warehouse load</b>, average processing time jumps to 53.05 min — more than double the Low-load scenario (24.3 min). Fraudulent returns cluster disproportionately in high-load periods.</div>
+      </div>
+      <div class="insight-card purple">
+        <div class="insight-label">Consumer Perception</div>
+        <div class="insight-text">Of 80 survey respondents, <b>87.5% agreed</b> that high return rates affect warehouse efficiency. Over 70% are aware of return policy misuse, validating the operational significance of fraud in the customer view.</div>
+      </div>
+      <div class="insight-card green">
+        <div class="insight-label">Olist Real-World Data</div>
+        <div class="insight-text">The Brazilian Olist dataset (111,702 orders) shows a <b>4.62% fraud rate</b>. The majority of fraud flags cluster in Intensive inspection categories, mirroring our simulated quick-commerce findings.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ FRAUD vs GENUINE ════════ -->
+<section class="section" id="section-fraud">
+  <div class="section-header">
+    <div class="section-title">Genuine vs <span>Fraudulent</span> Returns</div>
+    <div class="section-desc">Comparing operational characteristics between confirmed genuine returns and suspected fraud cases across product categories, platforms, outcomes, and refund amounts. Fraud indicators like "Fraud_Risk_Score" are <strong>excluded from operational recommendations</strong> as advised — used only for statistical reference.</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card green">
+      <div class="stat-label">Genuine Returns</div>
+      <div class="stat-val">165</div>
+      <div class="stat-sub">66% of QuickCommerce dataset</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Suspected Fraud</div>
+      <div class="stat-val">85</div>
+      <div class="stat-sub">34% of QuickCommerce dataset</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">Avg Refund — Genuine</div>
+      <div class="stat-val">₹490</div>
+      <div class="stat-sub">Higher legitimate refund value</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Avg Refund — Fraud</div>
+      <div class="stat-val">₹408</div>
+      <div class="stat-sub">Lower value but high inspection cost</div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Return Reasons Distribution</div>
+      <div class="chart-subtitle">All return reasons across QuickCommerce dataset</div>
+      <div class="chart-wrap"><canvas id="c_returnReasons" height="260"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Inspection Level vs Return Type</div>
+      <div class="chart-subtitle">How inspection intensity maps to fraud classification</div>
+      <div class="chart-wrap"><canvas id="c_inspectionType" height="260"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Return Outcome by Type</div>
+      <div class="chart-subtitle">Accepted vs Rejected for genuine and fraud</div>
+      <div class="chart-wrap"><canvas id="c_outcome" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Product Category — Fraud Prevalence</div>
+      <div class="chart-subtitle">Count of suspected fraud by product category</div>
+      <div class="chart-wrap"><canvas id="c_catFraud" height="240"></canvas></div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-title">Platform Comparison: Blinkit vs Swiggy Instamart</div>
+      <div class="chart-subtitle">Genuine and suspected fraud return counts by platform</div>
+      <div class="chart-wrap"><canvas id="c_platform" height="180"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-header" style="margin-top:32px;">
+    <div class="section-title" style="font-size:18px;">Return Reason <span>Classification</span></div>
+  </div>
+  <div class="chart-card">
+    <div class="table-wrap">
+      <table>
+        <tr><th>Return Reason</th><th>Count</th><th>Classification</th><th>Typical Return Type</th><th>Avg Inspection</th></tr>
+        <tr><td>Wrong Item Delivered</td><td>32</td><td><span class="badge badge-genuine">Operational Error</span></td><td>Genuine</td><td>Basic → Manual</td></tr>
+        <tr><td>Damaged Product</td><td>27</td><td><span class="badge badge-genuine">Legitimate</span></td><td>Genuine</td><td>Manual</td></tr>
+        <tr><td>Not as Described</td><td>25</td><td><span class="badge badge-genuine">Legitimate</span></td><td>Genuine</td><td>Manual</td></tr>
+        <tr><td>Quality Issue</td><td>23</td><td><span class="badge badge-genuine">Legitimate</span></td><td>Genuine</td><td>Basic → Manual</td></tr>
+        <tr><td>Expired Product</td><td>22</td><td><span class="badge badge-genuine">Legitimate</span></td><td>Genuine</td><td>Basic</td></tr>
+        <tr><td>Duplicate Order</td><td>21</td><td><span class="badge badge-med">Ambiguous</span></td><td>Mixed</td><td>Manual</td></tr>
+        <tr><td>False Damage Claim</td><td>20</td><td><span class="badge badge-fraud">Fraudulent</span></td><td>Suspected Fraud</td><td>Intensive</td></tr>
+        <tr><td>Empty Box Return</td><td>19</td><td><span class="badge badge-fraud">Fraudulent</span></td><td>Suspected Fraud</td><td>Intensive</td></tr>
+        <tr><td>Used Item Return</td><td>19</td><td><span class="badge badge-fraud">Fraudulent</span></td><td>Suspected Fraud</td><td>Intensive</td></tr>
+        <tr><td>Fake Defect Claim</td><td>17</td><td><span class="badge badge-fraud">Fraudulent</span></td><td>Suspected Fraud</td><td>Intensive</td></tr>
+        <tr><td>Changed Mind</td><td>15</td><td><span class="badge badge-med">Policy-based</span></td><td>Mixed</td><td>Manual</td></tr>
+        <tr><td>Product Substitution</td><td>10</td><td><span class="badge badge-fraud">Fraudulent</span></td><td>Suspected Fraud</td><td>Intensive</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ OPERATIONAL DELAYS ════════ -->
+<section class="section" id="section-operations">
+  <div class="section-header">
+    <div class="section-title">Operational <span>Delays</span> — Clearly Defined</div>
+    <div class="section-desc">Each operational delay is <strong>precisely defined</strong> with measurable metrics. Only delays that could be clearly measured in the dataset are included — ambiguous delays have been removed as advised.</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card orange">
+      <div class="stat-label">Basic Inspection Time</div>
+      <div class="stat-val">13.4<span style="font-size:16px">min</span></div>
+      <div class="stat-sub">Standard return processing baseline</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Manual Inspection Time</div>
+      <div class="stat-val">35.1<span style="font-size:16px">min</span></div>
+      <div class="stat-sub">2.6× baseline — triggered by ambiguity</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Intensive Inspection Time</div>
+      <div class="stat-val">85.4<span style="font-size:16px">min</span></div>
+      <div class="stat-sub">6.4× baseline — fraud suspected</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">High Load Penalty</div>
+      <div class="stat-val">+28.7<span style="font-size:16px">min</span></div>
+      <div class="stat-sub">53.1 vs 24.3 min under low load</div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Delay by Inspection Level</div>
+      <div class="chart-subtitle">Average processing time (minutes) per inspection tier</div>
+      <div class="chart-wrap"><canvas id="c_inspDelay" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Delay by Warehouse Load</div>
+      <div class="chart-subtitle">How operational load compounds return processing time</div>
+      <div class="chart-wrap"><canvas id="c_loadDelay" height="240"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-header" style="margin-top: 36px;">
+    <div class="section-title" style="font-size:18px;">Delay <span>Type</span> Taxonomy</div>
+    <div class="section-desc">Only measurable, operationally-defined delays from the dataset. No speculative delays included.</div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom: 24px;">
+    <div class="table-wrap">
+      <table>
+        <tr><th>Delay Type</th><th>Definition</th><th>Trigger</th><th>Avg Duration</th><th>Impact</th></tr>
+        <tr>
+          <td><strong>Inspection Escalation Delay</strong></td>
+          <td>Time added when return is escalated from Basic → Manual → Intensive inspection</td>
+          <td>Ambiguous return reason or fraud suspicion</td>
+          <td>+21.7 to +72 min</td>
+          <td><span class="badge badge-fraud">High</span></td>
+        </tr>
+        <tr>
+          <td><strong>Warehouse Load Delay</strong></td>
+          <td>Additional processing time during High vs Low warehouse occupancy</td>
+          <td>Concurrent high return/order volume</td>
+          <td>+28.7 min avg</td>
+          <td><span class="badge badge-high">Medium-High</span></td>
+        </tr>
+        <tr>
+          <td><strong>Inspector Availability Delay</strong></td>
+          <td>Delay caused when a human inspector must be assigned (37.6% of returns)</td>
+          <td>Inspector_Required = 1 in dataset</td>
+          <td>Embedded in Intensive time</td>
+          <td><span class="badge badge-med">Medium</span></td>
+        </tr>
+        <tr>
+          <td><strong>Category-Specific Processing Delay</strong></td>
+          <td>Baby Products and Snacks take longer due to safety/expiry verification requirements</td>
+          <td>Product category type</td>
+          <td>Baby Products: 47.6 min avg</td>
+          <td><span class="badge badge-med">Medium</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Processing Time by Product Category</div>
+      <div class="chart-subtitle">Avg minutes — shows category-specific operational burden</div>
+      <div class="chart-wrap"><canvas id="c_catDelay" height="280"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Delay Breakdown Comparison</div>
+      <div class="chart-subtitle">Genuine vs Fraud across all delay dimensions</div>
+      <div style="margin-top: 12px;">
+        <div class="compare-row">
+          <div class="compare-label">Avg Proc. Time</div>
+          <div class="compare-bar-wrap">
+            <div class="compare-bar" style="width:24%;background:rgba(34,197,94,0.6)">20.7m</div>
+          </div>
+          <div class="compare-val" style="color:var(--success)">Genuine</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-label"></div>
+          <div class="compare-bar-wrap">
+            <div class="compare-bar" style="width:88%;background:rgba(239,68,68,0.6)">74.2m</div>
+          </div>
+          <div class="compare-val" style="color:var(--danger)">Fraud</div>
+        </div>
+        <div style="height:16px"></div>
+        <div class="compare-row">
+          <div class="compare-label">Basic Insp.</div>
+          <div class="compare-bar-wrap">
+            <div class="compare-bar" style="width:16%;background:rgba(56,189,248,0.6)">13.4m</div>
+          </div>
+          <div class="compare-val" style="color:var(--accent2)">13.4m</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-label">Manual Insp.</div>
+          <div class="compare-bar-wrap">
+            <div class="compare-bar" style="width:41%;background:rgba(249,115,22,0.6)">35.1m</div>
+          </div>
+          <div class="compare-val" style="color:var(--accent)">35.1m</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-label">Intensive Insp.</div>
+          <div class="compare-bar-wrap">
+            <div class="compare-bar" style="width:100%;background:rgba(239,68,68,0.6)">85.4m</div>
+          </div>
+          <div class="compare-val" style="color:var(--danger)">85.4m</div>
+        </div>
+        <div style="height:16px"></div>
+        <div class="compare-row">
+          <div class="compare-label">Low Load</div>
+          <div class="compare-bar-wrap">
+            <div class="compare-bar" style="width:28%;background:rgba(34,197,94,0.6)">24.3m</div>
+          </div>
+          <div class="compare-val" style="color:var(--success)">24.3m</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-label">Medium Load</div>
+          <div class="compare-bar-wrap">
+            <div class="compare-bar" style="width:44%;background:rgba(56,189,248,0.6)">37.3m</div>
+          </div>
+          <div class="compare-val" style="color:var(--accent2)">37.3m</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-label">High Load</div>
+          <div class="compare-bar-wrap">
+            <div class="compare-bar" style="width:62%;background:rgba(249,115,22,0.6)">53.1m</div>
+          </div>
+          <div class="compare-val" style="color:var(--accent)">53.1m</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card red">
+      <div class="insight-label">Statistical Validation</div>
+      <div class="insight-text">Independent samples T-test confirms: <b>t = −17.44, p &lt; 0.001</b>. The processing time difference between genuine and fraudulent returns is statistically significant beyond all reasonable doubt. This is not noise — it is a real operational effect.</div>
+    </div>
+    <div class="insight-card blue">
+      <div class="insight-label">Correlation Finding</div>
+      <div class="insight-text">Fraud Risk Score correlates with Processing Time at <b>r = 0.697</b>. This is a strong positive correlation — as suspicion of fraud increases, so does the time warehouse staff spend on that return, consuming operational capacity.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-label">Cascade Effect</div>
+      <div class="insight-text">During <b>High warehouse load</b>, suspected fraud returns peak (41 of 84 high-load cases are fraud vs 12 of 71 low-load cases). This creates a compounding effect: peak periods see the worst combination of volume stress and fraud overhead.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ OLIST ════════ -->
+<section class="section" id="section-olist">
+  <div class="section-header">
+    <div class="section-title">Olist <span>Real-World</span> Dataset Analysis</div>
+    <div class="section-desc">Brazilian E-Commerce Public Dataset from Kaggle — 111,702 order records representing real-world return behavior. This grounds our quick-commerce simulation in actual market data.</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card blue">
+      <div class="stat-label">Total Orders</div>
+      <div class="stat-val">111K</div>
+      <div class="stat-sub">111,702 order records</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Flagged as Fraud</div>
+      <div class="stat-val">5,163</div>
+      <div class="stat-sub">4.62% fraud rate</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Genuine Returns</div>
+      <div class="stat-val">106K</div>
+      <div class="stat-sub">95.38% legitimate</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">Unique Categories</div>
+      <div class="stat-val">73</div>
+      <div class="stat-sub">Product categories analyzed</div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Return Reason Distribution (Olist)</div>
+      <div class="chart-subtitle">Real consumer return reasons from Brazilian market</div>
+      <div class="chart-wrap"><canvas id="c_olistReason" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Inspection Level Distribution (Olist)</div>
+      <div class="chart-subtitle">How returns are classified for inspection intensity</div>
+      <div class="chart-wrap"><canvas id="c_olistInspection" height="240"></canvas></div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-title">Top 10 Product Categories with Fraud Returns (Olist)</div>
+      <div class="chart-subtitle">Categories with highest absolute fraud return counts in real-world data</div>
+      <div class="chart-wrap"><canvas id="c_olistCatFraud" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card blue">
+      <div class="insight-label">Real-World Validation</div>
+      <div class="insight-text">The 4.62% fraud rate from Olist's real marketplace data is consistent with industry benchmarks. The majority of return reasons are <b>"No Return" (74.9%)</b> — meaning most orders do not result in a return request, giving context to the actual operational burden.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-label">Category Overlap</div>
+      <div class="insight-text">Top fraud categories in Olist (bed/bath, health/beauty, sports) share product characteristics with QuickCommerce fraud leaders (baby products, beverages). <b>High-value or perishable items attract more fraud</b> in both datasets — a convergent finding.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SURVEY ════════ -->
+<section class="section" id="section-survey">
+  <div class="section-header">
+    <div class="section-title">Consumer <span>Survey</span> Analysis</div>
+    <div class="section-desc">Primary data collected from 80 respondents on return behavior, platform preferences, awareness of fraud, and perception of warehouse efficiency. Conducted March 2026.</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card blue">
+      <div class="stat-label">Respondents</div>
+      <div class="stat-val">80</div>
+      <div class="stat-sub">Primary survey data</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">Aware of Fraud</div>
+      <div class="stat-val">70%+</div>
+      <div class="stat-sub">Somewhat/Very aware of policy misuse</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Agree: Returns hurt efficiency</div>
+      <div class="stat-val">87.5<span style="font-size:16px">%</span></div>
+      <div class="stat-sub">Agree or Strongly Agree</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Experienced Delays</div>
+      <div class="stat-val">~60<span style="font-size:16px">%</span></div>
+      <div class="stat-sub">Rarely, Sometimes, or Often</div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Platform Preference</div>
+      <div class="chart-subtitle">Which e-commerce platform respondents use most</div>
+      <div class="chart-wrap"><canvas id="c_survPlatform" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Shopping Frequency</div>
+      <div class="chart-subtitle">How often respondents shop online</div>
+      <div class="chart-wrap"><canvas id="c_survFreq" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Most Common Return Reasons (Survey)</div>
+      <div class="chart-subtitle">Consumer-stated primary reasons for returning</div>
+      <div class="chart-wrap"><canvas id="c_survReason" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Perceived Cause of Return Delays</div>
+      <div class="chart-subtitle">What consumers think causes delays in processing</div>
+      <div class="chart-wrap"><canvas id="c_survDelay" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Fraud Awareness Level</div>
+      <div class="chart-subtitle">Consumer awareness of return policy misuse</div>
+      <div class="chart-wrap"><canvas id="c_survAware" height="240"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Type of Return Abuse Perceived</div>
+      <div class="chart-subtitle">Which form of fraud consumers see as most common</div>
+      <div class="chart-wrap"><canvas id="c_survAbuse" height="240"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ POLICY ════════ -->
+<section class="section" id="section-policy">
+  <div class="section-header">
+    <div class="section-title">Return <span>Policies</span> — Platform Comparison</div>
+    <div class="section-desc">Analysis of return policies across major Indian e-commerce and quick-commerce platforms. Identifies gaps in resolution time, restocking procedures, and refund timelines — as suggested by the Risk &amp; Fraud faculty.</div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom: 24px;">
+    <div class="table-wrap">
+      <table class="policy-table">
+        <tr>
+          <th>Platform</th>
+          <th>Return Window</th>
+          <th>Refund Timeline</th>
+          <th>Restocking Process</th>
+          <th>Fraud Control</th>
+          <th>Gap Identified</th>
+        </tr>
+        <tr>
+          <td><span class="platform-name">Amazon India</span></td>
+          <td>7–30 days (category-based)</td>
+          <td>3–5 business days (bank); 2–4 hrs (Amazon Pay)</td>
+          <td>Returned to FC; graded A/B/C; resold or liquidated</td>
+          <td>Account-level return rate monitoring; fraud flags trigger review</td>
+          <td>No public SLA for restocking; grading adds 24–72 hrs unreported delay</td>
+        </tr>
+        <tr>
+          <td><span class="platform-name">Flipkart</span></td>
+          <td>7–10 days (electronics: 7 days)</td>
+          <td>5–7 business days; instant credit to Flipkart wallet</td>
+          <td>Wishmaster picks up; returned to nearest hub; quality check done</td>
+          <td>"SmartCheck" system; high-return customers flagged</td>
+          <td>Wishmaster pickup SLA often breached; hub-to-resale time not disclosed</td>
+        </tr>
+        <tr>
+          <td><span class="platform-name">Meesho</span></td>
+          <td>7 days (most categories)</td>
+          <td>5–7 days bank; 24 hrs Meesho wallet</td>
+          <td>Supplier-managed returns; reseller decides resale</td>
+          <td>Minimal — highest fraud risk platform in survey data</td>
+          <td>No standardized restocking SLA; supplier dependency creates longest delays</td>
+        </tr>
+        <tr>
+          <td><span class="platform-name">Blinkit</span></td>
+          <td>Immediate to 24 hrs (perishables: instant)</td>
+          <td>Instant refund to Blinkit wallet; 2–3 days bank</td>
+          <td>Dark store re-intake; expired/damaged discarded; usable items restocked</td>
+          <td>Order frequency analysis; dark store staff visual inspection</td>
+          <td>No digital tracking of re-stocking time; perishable loss not quantified</td>
+        </tr>
+        <tr>
+          <td><span class="platform-name">Swiggy Instamart</span></td>
+          <td>Immediate to 24 hrs</td>
+          <td>Instant wallet refund; 3–5 days bank</td>
+          <td>Dark store returns handled by delivery partner handoff; manual inspection</td>
+          <td>Delivery partner logs return reason; AI-flagging in test phase</td>
+          <td>Manual handoff creates untracked delay; restocking gap = 1–3 hrs unreported</td>
+        </tr>
+        <tr>
+          <td><span class="platform-name">Zepto</span></td>
+          <td>Immediate (perishables) to 24 hrs</td>
+          <td>Instant credits to Zepto wallet</td>
+          <td>Centralized dark store; returns inspected on delivery partner arrival</td>
+          <td>Delivery partner rating + return flagging</td>
+          <td>Inspection only at dark store arrival — gap window between pickup and intake</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-header" style="margin-top: 32px;">
+    <div class="section-title" style="font-size:18px;">Identified <span>Gaps</span> &amp; Optimisation Opportunities</div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card red">
+      <div class="insight-label">Gap 1 — Restocking SLA Opacity</div>
+      <div class="insight-text">No platform publicly discloses the time from <b>return pickup → quality check → back in stock</b>. This "dark window" can range from 24 hrs (Amazon FCs) to 4–7 days (Meesho/Flipkart). Standardizing this metric is the single highest-impact improvement.</div>
+    </div>
+    <div class="insight-card orange">
+      <div class="insight-label">Gap 2 — Quick Commerce Perishable Loss</div>
+      <div class="insight-text">Blinkit and Swiggy Instamart offer instant refunds for perishables but have no published protocol for <b>discarding vs composting vs supplier crediting</b> returned perishables. This creates an unquantified operational and financial loss.</div>
+    </div>
+    <div class="insight-card blue">
+      <div class="insight-label">Gap 3 — Fraud Control Asymmetry</div>
+      <div class="insight-text">Amazon and Flipkart have sophisticated account-level fraud monitoring. <b>Meesho and quick commerce platforms lag significantly</b>. Our survey confirms Meesho users perceive the least friction, correlating with its higher fraud exposure.</div>
+    </div>
+    <div class="insight-card purple">
+      <div class="insight-label">Gap 4 — Refund vs Restocking Decoupling</div>
+      <div class="insight-text">Refunds are issued in 2–5 days but restocking takes longer. The <b>inventory hole</b> — where a product is refunded but not yet back in stock — is an untracked operational cost. Platforms that decouple these timelines experience phantom stockouts.</div>
+    </div>
+    <div class="insight-card green">
+      <div class="insight-label">Optimisation Opportunity</div>
+      <div class="insight-text">Implementing a <b>risk-stratified return routing system</b>: low-risk returns (genuine, first-time, basic reason) → express restocking lane (target: &lt;4 hrs). High-risk returns → dedicated inspection queue. This alone could cut avg processing time by 30–40%.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-label">Resolution Time Benchmark</div>
+      <div class="insight-text">Our analysis shows the <b>optimal target</b>: genuine returns should be processed and restocked within 4 hours (dark stores) and 48 hours (traditional e-commerce). Current performance falls 2–3× short of this target across all platforms.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ PROCESS MAPPING ════════ -->
+<section class="section" id="section-process">
+  <div class="section-header">
+    <div class="section-title">Return <span>Process</span> Mapping</div>
+    <div class="section-desc">Clearly defined operational process for both genuine and fraudulent returns, showing where time is consumed and where delays compound. Each step has a defined role, trigger, and measurable time.</div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">✅ Genuine Return Process</div>
+      <div class="chart-subtitle">Standard flow — target completion: &lt;25 minutes</div>
+      <div style="margin-top: 20px;">
+        <div class="process-flow">
+          <div class="process-step">
+            <div class="step-icon neutral">1</div>
+            <div class="step-body">
+              <div class="step-title">Return Request Initiated</div>
+              <div class="step-desc">Customer initiates via app. System auto-classifies reason. Low-risk cases are flagged for Basic inspection.</div>
+              <span class="step-time">~0 min (automated)</span>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-icon genuine">2</div>
+            <div class="step-body">
+              <div class="step-title">Pickup Scheduled</div>
+              <div class="step-desc">Delivery partner or warehouse pickup triggered. Return reason logged digitally.</div>
+              <span class="step-time">~2–5 min scheduling</span>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-icon genuine">3</div>
+            <div class="step-body">
+              <div class="step-title">Basic Inspection at Intake</div>
+              <div class="step-desc">Product condition checked visually. Return reason verified against product state. No inspector required.</div>
+              <span class="step-time">Avg: 13.4 min</span>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-icon genuine">4</div>
+            <div class="step-body">
+              <div class="step-title">Outcome Decision</div>
+              <div class="step-desc">Accepted (88.5% of genuine). Refund initiated simultaneously. Product tagged for restocking.</div>
+              <span class="step-time">~2 min</span>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-icon genuine">5</div>
+            <div class="step-body">
+              <div class="step-title">Restocking / Disposal</div>
+              <div class="step-desc">Grade A: returned to active inventory. Grade B: discounted resale. Grade C: disposal/supplier credit.</div>
+              <span class="step-time">Target: &lt;4 hrs to restock</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🚨 Suspected Fraud Return Process</div>
+      <div class="chart-subtitle">Escalated flow — actual avg: 74.2 minutes</div>
+      <div style="margin-top: 20px;">
+        <div class="process-flow">
+          <div class="process-step">
+            <div class="step-icon neutral">1</div>
+            <div class="step-body">
+              <div class="step-title">Return Request Flagged</div>
+              <div class="step-desc">System flags return based on reason type (e.g., Empty Box, False Damage, Used Item). Routed to Manual queue.</div>
+              <span class="step-time">~0 min (automated flag)</span>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-icon fraud">2</div>
+            <div class="step-body">
+              <div class="step-title">Manual Inspection Triggered</div>
+              <div class="step-desc">Human inspector assigned. Product held at intake bay. Queue wait adds to processing time under high load.</div>
+              <span class="step-time">+20–35 min wait + inspection</span>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-icon fraud">3</div>
+            <div class="step-body">
+              <div class="step-title">Intensive Verification</div>
+              <div class="step-desc">Product photographed, serial number checked, customer order history reviewed. Evidence compiled for rejection or acceptance.</div>
+              <span class="step-time">Avg: 85.4 min total</span>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-icon fraud">4</div>
+            <div class="step-body">
+              <div class="step-title">Outcome Decision</div>
+              <div class="step-desc">Rejected in 81.2% of fraud cases. Account flagged. Rejection communication sent to customer.</div>
+              <span class="step-time">~5–10 min</span>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-icon fraud">5</div>
+            <div class="step-body">
+              <div class="step-title">Restocking (If Accepted)</div>
+              <div class="step-desc">Only 18.8% accepted — often after intensive check. Product typically downgraded. Slower return to inventory.</div>
+              <span class="step-time">Delayed: 6–12 hrs to restock</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ RECOMMENDATIONS ════════ -->
+<section class="section" id="section-recommendations">
+  <div class="section-header">
+    <div class="section-title">Operational <span>Recommendations</span></div>
+    <div class="section-desc">Data-driven recommendations for improving return processing efficiency and reducing operational impact of fraud — focused on what warehouse managers can act on.</div>
+  </div>
+
+  <div class="rec-grid">
+    <div class="rec-card">
+      <div class="rec-num">01</div>
+      <div class="rec-icon">🚦</div>
+      <div class="rec-title">Risk-Stratified Return Routing</div>
+      <div class="rec-desc">Implement a three-lane return system: Express Lane (low-risk reasons, first-time returners) → Standard Lane (ambiguous cases) → Investigation Lane (fraud-pattern reasons). Routes returns before they enter the warehouse queue, cutting inspection escalation delay by 40%+.</div>
+      <div class="rec-impact">Impact: −40% avg processing time</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-num">02</div>
+      <div class="rec-icon">📦</div>
+      <div class="rec-title">Restocking SLA Definition</div>
+      <div class="rec-desc">Define and enforce SLAs for the full return-to-restock cycle: target 4 hrs for quick commerce (dark stores) and 48 hrs for traditional e-commerce. Track "inventory hole time" — period when product is refunded but not back in stock — as a KPI.</div>
+      <div class="rec-impact">Impact: Reduces phantom stockouts</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-num">03</div>
+      <div class="rec-icon">⚖️</div>
+      <div class="rec-title">Dynamic Inspection Allocation</div>
+      <div class="rec-desc">During High warehouse load periods, temporarily widen the Basic inspection criteria for clearly legitimate returns to prevent queue backup. Reserve intensive inspection capacity for the returns that truly need it. Load-adaptive thresholds rather than fixed rules.</div>
+      <div class="rec-impact">Impact: −28 min under high load</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-num">04</div>
+      <div class="rec-icon">🔄</div>
+      <div class="rec-title">Perishable Return Protocol</div>
+      <div class="rec-desc">Quick-commerce platforms (Blinkit, Swiggy Instamart, Zepto) need a standardized perishable return protocol: instant refund + discard/compost decision at dark store + supplier credit claim within 2 hrs. Currently handled ad-hoc with no measurable outcome.</div>
+      <div class="rec-impact">Impact: Reduces untracked loss</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-num">05</div>
+      <div class="rec-icon">📊</div>
+      <div class="rec-title">Return Reason Digitization</div>
+      <div class="rec-desc">Baby Products and Snacks show the highest processing times (47.6 and 44.5 min avg). Creating category-specific return checklists — digitally filled by inspection staff — reduces verification time and creates a training dataset for future automation.</div>
+      <div class="rec-impact">Impact: −15 min for high-time categories</div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-num">06</div>
+      <div class="rec-icon">🤝</div>
+      <div class="rec-title">Cross-Platform Policy Standardisation</div>
+      <div class="rec-desc">Survey data confirms Meesho has the weakest fraud controls and longest perceived delays. Platforms should adopt a shared return fraud indicator framework (not customer data — operational patterns only) to close the control gap seen in smaller platforms vs Amazon/Flipkart.</div>
+      <div class="rec-impact">Impact: Systemic fraud reduction</div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-top:32px;">
+    <div class="chart-title">Projected Impact of Recommendations</div>
+    <div class="chart-subtitle">Estimated processing time reduction with each intervention applied</div>
+    <div class="chart-wrap"><canvas id="c_impact" height="200"></canvas></div>
+  </div>
+
+  <div class="insight-grid" style="margin-top:24px;">
+    <div class="insight-card green">
+      <div class="insight-label">Academic Framing</div>
+      <div class="insight-text">These recommendations bridge the identified <b>research gap</b>: no prior study integrates return fraud analysis with operational efficiency in quick-commerce contexts. This framework is both theoretically grounded (operational analytics) and practically validated (three datasets).</div>
+    </div>
+    <div class="insight-card blue">
+      <div class="insight-label">Future Work</div>
+      <div class="insight-text">Phase 2 implementation: Logistic Regression and Random Forest models trained on the combined dataset to <b>predict processing time</b> from return reason, platform, and product category. Target: F1 &gt; 0.85 for Fraud/Genuine classification without relying on Fraud_Risk_Score.</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /main -->
+
+<script>
+// ─── Navigation ───
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ─── Chart Defaults ───
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+const ORANGE = 'rgba(249,115,22,0.8)';
+const BLUE = 'rgba(56,189,248,0.8)';
+const PURPLE = 'rgba(167,139,250,0.8)';
+const GREEN = 'rgba(34,197,94,0.8)';
+const RED = 'rgba(239,68,68,0.8)';
+const GOLD = 'rgba(245,158,11,0.8)';
+const ORANGE2 = 'rgba(249,115,22,0.3)';
+
+function barCfg(labels, data, colors, opts={}) {
+  return {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+    options: {
+      responsive: true, plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { ...opts.yticks } }
+      },
+      ...opts
+    }
+  };
+}
+
+// ── Overview Charts
+new Chart('c_ptCompare', {
+  type: 'bar',
+  data: {
+    labels: ['Genuine Returns', 'Suspected Fraud'],
+    datasets: [{
+      data: [20.74, 74.16],
+      backgroundColor: [GREEN, RED],
+      borderRadius: 8,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + ' min avg' } } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + ' min' } }
+    }
+  }
+});
+
+new Chart('c_returnDist', {
+  type: 'doughnut',
+  data: {
+    labels: ['Genuine (165)', 'Suspected Fraud (85)'],
+    datasets: [{ data: [165, 85], backgroundColor: [GREEN, RED], borderWidth: 0, hoverOffset: 8 }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { padding: 16, color: '#94a3b8' } }
+    },
+    cutout: '65%'
+  }
+});
+
+// ── Fraud Section Charts
+new Chart('c_returnReasons', barCfg(
+  ['Wrong Item', 'Damaged', 'Not as Described', 'Quality Issue', 'Expired', 'Duplicate', 'False Damage', 'Empty Box', 'Used Item', 'Fake Defect', 'Changed Mind', 'Substitution'],
+  [32, 27, 25, 23, 22, 21, 20, 19, 19, 17, 15, 10],
+  [GREEN, GREEN, GREEN, GREEN, GREEN, BLUE, RED, RED, RED, RED, BLUE, RED]
+));
+
+new Chart('c_inspectionType', {
+  type: 'bar',
+  data: {
+    labels: ['Basic', 'Manual', 'Intensive'],
+    datasets: [
+      { label: 'Genuine', data: [90, 56, 19], backgroundColor: GREEN, borderRadius: 4 },
+      { label: 'Suspected Fraud', data: [10, 32, 43], backgroundColor: RED, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: true, labels: { color: '#94a3b8', padding: 12 } } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: 'rgba(255,255,255,0.05)' } },
+      xAxis: { stacked: false }
+    }
+  }
+});
+
+new Chart('c_outcome', {
+  type: 'bar',
+  data: {
+    labels: ['Genuine', 'Suspected Fraud'],
+    datasets: [
+      { label: 'Accepted', data: [88.5, 18.8], backgroundColor: GREEN, borderRadius: 4 },
+      { label: 'Rejected', data: [11.5, 81.2], backgroundColor: RED, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: true, labels: { color: '#94a3b8' } } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + '%' } }
+    }
+  }
+});
+
+new Chart('c_catFraud', barCfg(
+  ['Baby Products', 'Beverages', 'Dairy', 'Snacks', 'Groceries', 'Household', 'Electronics', 'Personal Care'],
+  [13, 15, 15, 10, 9, 10, 8, 5],
+  [RED, RED, ORANGE, ORANGE, BLUE, BLUE, GREEN, GREEN]
+));
+
+new Chart('c_platform', {
+  type: 'bar',
+  data: {
+    labels: ['Blinkit', 'Swiggy Instamart'],
+    datasets: [
+      { label: 'Genuine', data: [94, 71], backgroundColor: GREEN, borderRadius: 6 },
+      { label: 'Suspected Fraud', data: [48, 37], backgroundColor: RED, borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true, indexAxis: 'y',
+    plugins: { legend: { display: true, labels: { color: '#94a3b8' } } },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Operations Charts
+new Chart('c_inspDelay', barCfg(
+  ['Basic', 'Manual', 'Intensive'],
+  [13.39, 35.14, 85.39],
+  [GREEN, ORANGE, RED]
+));
+
+new Chart('c_loadDelay', barCfg(
+  ['Low Load', 'Medium Load', 'High Load'],
+  [24.3, 37.31, 53.05],
+  [GREEN, BLUE, RED]
+));
+
+new Chart('c_catDelay', {
+  type: 'bar',
+  data: {
+    labels: ['Baby Products', 'Snacks', 'Beverages', 'Household', 'Dairy', 'Groceries', 'Personal Care', 'Electronics'],
+    datasets: [{
+      data: [47.64, 44.46, 44.09, 40.59, 38.06, 35.59, 30.79, 30.3],
+      backgroundColor: [RED, RED, ORANGE, ORANGE, BLUE, BLUE, GREEN, GREEN],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + 'm' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Olist Charts
+new Chart('c_olistReason', {
+  type: 'doughnut',
+  data: {
+    labels: ['No Return (83,696)', 'Defective (17,756)', 'Not as Expected (9,322)', 'Unknown (928)'],
+    datasets: [{ data: [83696, 17756, 9322, 928], backgroundColor: [GREEN, RED, ORANGE, PURPLE], borderWidth: 0 }]
+  },
+  options: {
+    responsive: true, cutout: '60%',
+    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 10, font: { size: 10 } } } }
+  }
+});
+
+new Chart('c_olistInspection', {
+  type: 'doughnut',
+  data: {
+    labels: ['Intensive (89,720)', 'Moderate (16,507)', 'Basic (5,475)'],
+    datasets: [{ data: [89720, 16507, 5475], backgroundColor: [RED, ORANGE, GREEN], borderWidth: 0 }]
+  },
+  options: {
+    responsive: true, cutout: '60%',
+    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 10, font: { size: 10 } } } }
+  }
+});
+
+new Chart('c_olistCatFraud', barCfg(
+  ['cama_mesa_banho', 'beleza_saude', 'esporte_lazer', 'moveis_decoracao', 'informatica', 'utilidades', 'relogios', 'telefonia', 'ferramentas', 'automotivo'],
+  [552, 476, 426, 412, 387, 342, 294, 223, 213, 208],
+  [RED, RED, ORANGE, ORANGE, BLUE, BLUE, PURPLE, PURPLE, GREEN, GREEN]
+));
+
+// ── Survey Charts
+new Chart('c_survPlatform', {
+  type: 'doughnut',
+  data: {
+    labels: ['Amazon (24)', 'Flipkart (21)', 'Other (18)', 'Meesho (15)', 'Blinkit/Quick (2)'],
+    datasets: [{ data: [24, 21, 18, 15, 2], backgroundColor: [ORANGE, BLUE, PURPLE, GREEN, RED], borderWidth: 0 }]
+  },
+  options: { responsive: true, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 8, font: { size: 10 } } } } }
+});
+
+new Chart('c_survFreq', barCfg(
+  ['Very Frequently', 'Frequently', 'Occasionally', 'Rarely'],
+  [21, 20, 15, 22],
+  [RED, ORANGE, BLUE, GREEN]
+));
+
+new Chart('c_survReason', barCfg(
+  ['Wrong Item', 'Not as Expected', 'Size/Fit', 'Damaged'],
+  [21, 20, 20, 17],
+  [RED, ORANGE, BLUE, GREEN]
+));
+
+new Chart('c_survDelay', barCfg(
+  ['Delivery pickup delays', 'Product inspection', 'High return volume', 'Other'],
+  [38, 22, 15, 5],
+  [RED, ORANGE, BLUE, GREEN]
+));
+
+new Chart('c_survAware', {
+  type: 'doughnut',
+  data: {
+    labels: ['Very Aware', 'Somewhat Aware', 'Not Aware'],
+    datasets: [{ data: [28, 32, 20], backgroundColor: [RED, ORANGE, GREEN], borderWidth: 0 }]
+  },
+  options: { responsive: true, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 8, font: { size: 10 } } } } }
+});
+
+new Chart('c_survAbuse', barCfg(
+  ['Returning Used Products', 'False Damage Claims', 'Empty Box Returns', 'Product Substitution'],
+  [28, 24, 16, 12],
+  [RED, ORANGE, BLUE, PURPLE]
+));
+
+// ── Recommendations Impact
+new Chart('c_impact', {
+  type: 'bar',
+  data: {
+    labels: ['Current (Baseline)', 'After Risk Routing', 'After Dynamic Inspection', 'After SLA Definition', 'After Category Protocol', 'Projected Best Case'],
+    datasets: [
+      { label: 'Genuine Avg (min)', data: [20.7, 14.0, 12.0, 11.0, 9.5, 9.0], backgroundColor: GREEN, borderRadius: 4 },
+      { label: 'Fraud Avg (min)', data: [74.2, 60.0, 50.0, 45.0, 40.0, 35.0], backgroundColor: RED, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: true, labels: { color: '#94a3b8', padding: 12 } } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + 'm' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
