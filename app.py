@@ -13,8 +13,6 @@ with open("ecommerce_returns_dashboard.html", "r", encoding="utf-8") as f:
 # ---------------- LOAD MODELS ----------------
 model_proc = joblib.load("processing_model.pkl")
 model_fraud = joblib.load("fraud_model.pkl")
-encoders = joblib.load("encoders.pkl")
-target_encoder = joblib.load("target_encoder.pkl")
 
 # ---------------- TABS ----------------
 tab1, tab2 = st.tabs(["🔮 Prediction System", "📊 Advanced Dashboard"])
@@ -29,44 +27,52 @@ with tab1:
 
     st.write("Predict processing category and fraud risk based on return details.")
 
-    # ---------------- INPUTS (USING ORIGINAL ENCODERS ✅) ----------------
-    category = st.selectbox(
-        "Product Category",
-        encoders["product_category_name"].classes_
-    )
+    # ---------------- HUMAN FRIENDLY MAPPINGS ----------------
+    category_display = {
+        "Electronics": 0,
+        "Groceries": 1,
+        "Clothing": 2
+    }
 
-    reason = st.selectbox(
-        "Return Reason",
-        encoders["return_reason"].classes_
-    )
+    reason_display = {
+        "Damaged": 0,
+        "Wrong Item": 1,
+        "Not Needed": 2
+    }
 
-    load = st.selectbox(
-        "Warehouse Load",
-        encoders["warehouse_load"].classes_
-    )
+    load_display = {
+        "Low": 0,
+        "Medium": 1,
+        "High": 2
+    }
 
-    inspection = st.selectbox(
-        "Inspection Level",
-        encoders["inspection_level"].classes_
-    )
+    inspection_display = {
+        "Basic": 0,
+        "Manual": 1,
+        "Intensive": 2
+    }
 
-    # Encode inputs (MATCHES TRAINING ✅)
-    category_encoded = encoders["product_category_name"].transform([category])[0]
-    reason_encoded = encoders["return_reason"].transform([reason])[0]
-    load_encoded = encoders["warehouse_load"].transform([load])[0]
-    inspection_encoded = encoders["inspection_level"].transform([inspection])[0]
-
-    # Optional: Processing label mapping (if needed)
     processing_map = {
         0: "Low Processing",
         1: "Medium Processing",
         2: "High Processing"
     }
 
+    # ---------------- INPUTS ----------------
+    category = st.selectbox("Product Category", list(category_display.keys()))
+    reason = st.selectbox("Return Reason", list(reason_display.keys()))
+    load = st.selectbox("Warehouse Load", list(load_display.keys()))
+    inspection = st.selectbox("Inspection Level", list(inspection_display.keys()))
+
+    # Encode values for model
+    category_encoded = category_display[category]
+    reason_encoded = reason_display[reason]
+    load_encoded = load_display[load]
+    inspection_encoded = inspection_display[inspection]
+
     # ---------------- PREDICTION ----------------
     if st.button("Predict"):
 
-        # Processing input
         proc_input = pd.DataFrame([[
             category_encoded,
             reason_encoded,
@@ -77,7 +83,6 @@ with tab1:
             "warehouse_load"
         ])
 
-        # Fraud input
         fraud_input = pd.DataFrame([[
             category_encoded,
             reason_encoded,
@@ -90,7 +95,6 @@ with tab1:
             "warehouse_load"
         ])
 
-        # Predictions
         proc_pred = model_proc.predict(proc_input)[0]
         fraud_prob = model_fraud.predict_proba(fraud_input)[0][1]
 
@@ -107,7 +111,6 @@ with tab1:
             st.warning("⚠️ Medium Fraud Risk")
         else:
             st.success("✅ Likely Genuine Return")
-
 
 # =====================================================
 # 📊 TAB 2: DASHBOARD
