@@ -30,18 +30,24 @@ load = st.selectbox(
     "Warehouse Load",
     encoders["warehouse_load"].classes_
 )
+inspection = st.selectbox(
+    "Inspection Level",
+    encoders["inspection_level"].classes_
+)
 
 if st.button("Predict"):
 
     input_data = [
         encoders["product_category_name"].transform([category])[0],
         encoders["return_reason"].transform([reason])[0],
+        encoders["inspection_level"].transform([inspection])[0],
         encoders["warehouse_load"].transform([load])[0]
     ]
 
     input_df = pd.DataFrame([input_data], columns=[
         "product_category_name",
         "return_reason",
+        "inspection_level",
         "warehouse_load"
     ])
 
