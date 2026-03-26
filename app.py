@@ -29,54 +29,44 @@ with tab1:
 
     st.write("Predict processing category and fraud risk based on return details.")
 
-    # ---------------- MAPPINGS ----------------
-    category_map = {
-        0: "Electronics",
-        1: "Groceries",
-        2: "Clothing"
-    }
+    # ---------------- INPUTS (USING ORIGINAL ENCODERS ✅) ----------------
+    category = st.selectbox(
+        "Product Category",
+        encoders["product_category_name"].classes_
+    )
 
-    reason_map = {
-        0: "Damaged",
-        1: "Wrong Item",
-        2: "Not Needed"
-    }
+    reason = st.selectbox(
+        "Return Reason",
+        encoders["return_reason"].classes_
+    )
 
-    load_map = {
-        0: "Low",
-        1: "Medium",
-        2: "High"
-    }
+    load = st.selectbox(
+        "Warehouse Load",
+        encoders["warehouse_load"].classes_
+    )
 
-    inspection_map = {
-        0: "Basic",
-        1: "Manual",
-        2: "Intensive"
-    }
+    inspection = st.selectbox(
+        "Inspection Level",
+        encoders["inspection_level"].classes_
+    )
 
+    # Encode inputs (MATCHES TRAINING ✅)
+    category_encoded = encoders["product_category_name"].transform([category])[0]
+    reason_encoded = encoders["return_reason"].transform([reason])[0]
+    load_encoded = encoders["warehouse_load"].transform([load])[0]
+    inspection_encoded = encoders["inspection_level"].transform([inspection])[0]
+
+    # Optional: Processing label mapping (if needed)
     processing_map = {
         0: "Low Processing",
         1: "Medium Processing",
         2: "High Processing"
     }
 
-    # ---------------- INPUTS ----------------
-    category = st.selectbox("Product Category", list(category_map.values()))
-    reason = st.selectbox("Return Reason", list(reason_map.values()))
-    load = st.selectbox("Warehouse Load", list(load_map.values()))
-    inspection = st.selectbox("Inspection Level", list(inspection_map.values()))
-
-    def get_key(val, dictionary):
-        return list(dictionary.keys())[list(dictionary.values()).index(val)]
-
-    category_encoded = get_key(category, category_map)
-    reason_encoded = get_key(reason, reason_map)
-    load_encoded = get_key(load, load_map)
-    inspection_encoded = get_key(inspection, inspection_map)
-
     # ---------------- PREDICTION ----------------
     if st.button("Predict"):
 
+        # Processing input
         proc_input = pd.DataFrame([[
             category_encoded,
             reason_encoded,
@@ -87,6 +77,7 @@ with tab1:
             "warehouse_load"
         ])
 
+        # Fraud input
         fraud_input = pd.DataFrame([[
             category_encoded,
             reason_encoded,
@@ -99,13 +90,14 @@ with tab1:
             "warehouse_load"
         ])
 
+        # Predictions
         proc_pred = model_proc.predict(proc_input)[0]
         fraud_prob = model_fraud.predict_proba(fraud_input)[0][1]
 
         # ---------------- OUTPUT ----------------
         st.markdown("### 🔍 Results")
 
-        st.success(f"📊 Processing Category: **{processing_map[proc_pred]}**")
+        st.success(f"📊 Processing Category: **{processing_map.get(proc_pred, proc_pred)}**")
 
         st.metric("Fraud Risk Score", f"{fraud_prob:.6f}")
 
