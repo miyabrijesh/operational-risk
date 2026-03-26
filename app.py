@@ -89,19 +89,19 @@ if st.button("Predict"):
     proc_pred = model_proc.predict(proc_input)[0]
     proc_label = target_encoder.inverse_transform([proc_pred])[0]
 
-    fraud_pred = model_fraud.predict(fraud_input)[0]
     fraud_prob = model_fraud.predict_proba(fraud_input)[0][1]
-    st.write("Fraud Probability:", fraud_prob)
 
     # ---------------- OUTPUT ----------------
 
     st.markdown("### 🔍 Results")
 
+    # Processing output
     st.success(f"📊 Processing Category: **{proc_label}**")
 
-    fraud_prob = model_fraud.predict_proba(fraud_input)[0][1]
+    # Fraud output (IMPROVED LOGIC)
+    st.metric("Fraud Risk Score", f"{fraud_prob:.6f}")
 
-    if fraud_prob > 0.3:
-        st.error(f"⚠️ Fraud Risk ({fraud_prob:.2f})")
+    if fraud_prob > 0.01:
+        st.error(f"⚠️ High Fraud Risk")
     else:
-        st.success(f"✅ Likely Genuine ({fraud_prob:.2f})")
+        st.success(f"✅ Likely Genuine Return")
