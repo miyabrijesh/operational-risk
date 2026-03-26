@@ -97,7 +97,9 @@ if st.button("Predict"):
 
     st.success(f"📊 Processing Category: **{proc_label}**")
 
-    if fraud_pred == 1:
-        st.error("⚠️ High Fraud Risk")
+    fraud_prob = model_fraud.predict_proba(fraud_input)[0][1]
+
+    if fraud_prob > 0.3:
+        st.error(f"⚠️ Fraud Risk ({fraud_prob:.2f})")
     else:
-        st.success("✅ Likely Genuine Return")
+        st.success(f"✅ Likely Genuine ({fraud_prob:.2f})")
