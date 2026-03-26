@@ -63,7 +63,7 @@ with tab1:
     # ----------- CREATE DISPLAY MAPPING -----------
 
     def clean_label(x):
-        return x.replace("_", " ").title()
+        return str(x).replace("_", " ").title()
 
     # Category
     category_options = encoders["product_category_name"].classes_
