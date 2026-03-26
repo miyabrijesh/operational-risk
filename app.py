@@ -27,7 +27,7 @@ with tab1:
 
     st.write("Predict processing category and fraud risk based on return details.")
 
-    # ---------------- DISPLAY MAPPINGS ----------------
+    # ---------------- CLEAN DISPLAY MAPPINGS ----------------
     category_map = {
         "Electronics": 0,
         "Groceries": 1,
@@ -52,6 +52,7 @@ with tab1:
         "Intensive": 2
     }
 
+    # ✅ FIX 1: Processing labels
     processing_map = {
         0: "Low Processing",
         1: "Medium Processing",
@@ -73,6 +74,7 @@ with tab1:
     # ---------------- PREDICTION ----------------
     if st.button("Predict"):
 
+        # Processing model input
         proc_input = pd.DataFrame([[
             category_encoded,
             reason_encoded,
@@ -83,6 +85,7 @@ with tab1:
             "warehouse_load"
         ])
 
+        # Fraud model input
         fraud_input = pd.DataFrame([[
             category_encoded,
             reason_encoded,
@@ -95,19 +98,20 @@ with tab1:
             "warehouse_load"
         ])
 
+        # Predictions
         proc_pred = model_proc.predict(proc_input)[0]
         fraud_prob = model_fraud.predict_proba(fraud_input)[0][1]
 
         # ---------------- OUTPUT ----------------
         st.markdown("### 🔍 Results")
 
-        # FIX 1: Processing label properly shown
+        # ✅ FIX 1 APPLIED
         st.success(f"📊 Processing Category: **{processing_map[proc_pred]}**")
 
-        # Fraud score
-        st.metric("Fraud Risk Score", f"{fraud_prob:.6f}")
+        # Show fraud score cleanly
+        st.metric("Fraud Risk Score", f"{fraud_prob:.4f}")
 
-        # FIX 2: Better fraud classification
+        # ✅ FIX 2 APPLIED (better thresholds)
         if fraud_prob > 0.05:
             st.error("⚠️ High Fraud Risk")
         elif fraud_prob > 0.01:
