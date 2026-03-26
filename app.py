@@ -13,6 +13,7 @@ with open("ecommerce_returns_dashboard.html", "r", encoding="utf-8") as f:
 # ---------------- LOAD MODELS ----------------
 model_proc = joblib.load("processing_model.pkl")
 model_fraud = joblib.load("fraud_model.pkl")
+encoders = joblib.load("encoders.pkl")  # ✅ FIXED POSITION
 
 # ---------------- TABS ----------------
 tab1, tab2 = st.tabs(["🔮 Prediction System", "📊 Advanced Dashboard"])
@@ -27,70 +28,36 @@ with tab1:
 
     st.write("Predict processing category and fraud risk based on return details.")
 
-    # ---------------- CLEAN DISPLAY MAPPINGS ----------------
-    category_map = {
-        "Electronics": 0,
-        "Groceries": 1,
-        "Clothing": 2
-    }
-
-    reason_map = {
-        "Damaged": 0,
-        "Wrong Item": 1,
-        "Not Needed": 2
-    }
-
-    load_map = {
-        "Low": 0,
-        "Medium": 1,
-        "High": 2
-    }
-
-    inspection_map = {
-        "Basic": 0,
-        "Manual": 1,
-        "Intensive": 2
-    }
-
-    # ✅ FIX 1: Processing labels
+    # ---------------- PROCESSING LABELS ----------------
     processing_map = {
         0: "Low Processing",
         1: "Medium Processing",
         2: "High Processing"
     }
 
-   encoders = joblib.load("encoders.pkl")
-
-# ----------- CREATE DISPLAY MAPPING -----------
-
+    # ----------- CLEAN LABEL FUNCTION -----------
     def clean_label(x):
         return x.replace("_", " ").title()
 
-    # Category
+    # ----------- DROPDOWNS USING ENCODERS -----------
+
     category_options = encoders["product_category_name"].classes_
     category_display = {clean_label(x): x for x in category_options}
-
     category = st.selectbox("Product Category", list(category_display.keys()))
 
-    # Return Reason
     reason_options = encoders["return_reason"].classes_
     reason_display = {clean_label(x): x for x in reason_options}
-
     reason = st.selectbox("Return Reason", list(reason_display.keys()))
 
-    # Warehouse Load
     load_options = encoders["warehouse_load"].classes_
     load_display = {clean_label(x): x for x in load_options}
-
     load = st.selectbox("Warehouse Load", list(load_display.keys()))
 
-    # Inspection Level
     inspection_options = encoders["inspection_level"].classes_
     inspection_display = {clean_label(x): x for x in inspection_options}
-
     inspection = st.selectbox("Inspection Level", list(inspection_display.keys()))
 
-    # ----------- ENCODING (SAFE NOW) -----------
+    # ----------- ENCODING -----------
 
     category_encoded = encoders["product_category_name"].transform([category_display[category]])[0]
     reason_encoded = encoders["return_reason"].transform([reason_display[reason]])[0]
@@ -100,7 +67,6 @@ with tab1:
     # ---------------- PREDICTION ----------------
     if st.button("Predict"):
 
-        # Processing model input
         proc_input = pd.DataFrame([[
             category_encoded,
             reason_encoded,
@@ -111,7 +77,6 @@ with tab1:
             "warehouse_load"
         ])
 
-        # Fraud model input
         fraud_input = pd.DataFrame([[
             category_encoded,
             reason_encoded,
@@ -124,20 +89,16 @@ with tab1:
             "warehouse_load"
         ])
 
-        # Predictions
         proc_pred = model_proc.predict(proc_input)[0]
         fraud_prob = model_fraud.predict_proba(fraud_input)[0][1]
 
         # ---------------- OUTPUT ----------------
         st.markdown("### 🔍 Results")
 
-        # ✅ FIX 1 APPLIED
         st.success(f"📊 Processing Category: **{processing_map[proc_pred]}**")
 
-        # Show fraud score cleanly
         st.metric("Fraud Risk Score", f"{fraud_prob:.4f}")
 
-        # ✅ FIX 2 APPLIED (better thresholds)
         if fraud_prob > 0.05:
             st.error("⚠️ High Fraud Risk")
         elif fraud_prob > 0.01:
