@@ -90,6 +90,8 @@ if st.button("Predict"):
     proc_label = target_encoder.inverse_transform([proc_pred])[0]
 
     fraud_pred = model_fraud.predict(fraud_input)[0]
+    fraud_prob = model_fraud.predict_proba(fraud_input)[0][1]
+    st.write("Fraud Probability:", fraud_prob)
 
     # ---------------- OUTPUT ----------------
 
