@@ -66,10 +66,12 @@ with tab1:
     inspection = st.selectbox("Inspection Level", list(inspection_map.keys()))
 
     # ---------------- ENCODING ----------------
-    category_encoded = category_map[category]
-    reason_encoded = reason_map[reason]
-    load_encoded = load_map[load]
-    inspection_encoded = inspection_map[inspection]
+    encoders = joblib.load("encoders.pkl")
+
+    category_encoded = encoders["product_category_name"].transform([category])[0]
+    reason_encoded = encoders["return_reason"].transform([reason])[0]
+    load_encoded = encoders["warehouse_load"].transform([load])[0]
+    inspection_encoded = encoders["inspection_level"].transform([inspection])[0]
 
     # ---------------- PREDICTION ----------------
     if st.button("Predict"):
